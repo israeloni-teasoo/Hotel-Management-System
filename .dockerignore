@@ -1,0 +1,10 @@
+# Keep the build context (and image) lean
+.git
+.gitignore
+.github
+.travis.yml
+Dockerfile
+docker-compose.yml
+DOCKER.md
+*.md
+!README.md

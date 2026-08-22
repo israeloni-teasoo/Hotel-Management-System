@@ -1,0 +1,65 @@
+# QloApps — Hotel Management System
+# One-command local stack: the QloApps app (built from this repo) + MySQL.
+#
+#   docker compose up -d --build
+#
+# Then open http://localhost:8080 and complete the browser installer.
+# During install, use these database settings:
+#   Server:   db
+#   Name:     qloapps
+#   Login:    qloapps
+#   Password: qloapps
+#
+# See DOCKER.md for full instructions.
+
+services:
+  app:
+    build: .
+    image: hotel-management-system:local
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Convenience only — the installer still asks for these in the browser.
+      DB_SERVER: db
+      DB_NAME: qloapps
+      DB_USER: qloapps
+      DB_PASSWD: qloapps
+    volumes:
+      # Persist installer output and user-generated content across rebuilds.
+      # (Named volumes seed themselves from the image on first run.)
+      - qloapps_config:/var/www/html/config
+      - qloapps_img:/var/www/html/img
+      - qloapps_upload:/var/www/html/upload
+      - qloapps_download:/var/www/html/download
+      # --- To edit code live instead of rebuilding, comment the four volumes
+      #     above and uncomment the bind mount below (Linux/macOS):
+      # - ./:/var/www/html
+
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_DATABASE: qloapps
+      MYSQL_USER: qloapps
+      MYSQL_PASSWORD: qloapps
+      MYSQL_ROOT_PASSWORD: qloapps_root
+    volumes:
+      - qloapps_db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+
+volumes:
+  qloapps_db:
+  qloapps_config:
+  qloapps_img:
+  qloapps_upload:
+  qloapps_download:
